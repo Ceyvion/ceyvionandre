@@ -6,7 +6,10 @@ A modern, minimalist photography portfolio showcasing models and professional wo
 
 - Responsive design optimized for all devices
 - Advanced image loading and optimization
-- Interactive filtering system (Year/Type)
+- Dynamic project showcase with automatic slideshows
+- Interactive filtering system by model name and year
+- Individual model profile pages with categorized galleries
+- Random project selection on page refresh
 - Smooth transitions and animations
 - Keyboard navigation for galleries
 - Progressive image loading
@@ -55,30 +58,62 @@ A modern, minimalist photography portfolio showcasing models and professional wo
 ```
 ├── public/
 │   └── images/
-│       ├── models/          # Model photography
-│       ├── projects/        # Project photography
-│       └── placeholders/    # Loading placeholders
+│       ├── galleries/
+│       │   └── models/     # Model photography organized by model
+│       ├── models/         # Model profile images
+│       ├── projects/       # Project photography
+│       └── placeholders/   # Loading placeholders
 ├── src/
-│   ├── components/          # Reusable components
-│   │   ├── Layout.js       # Main layout wrapper
-│   │   ├── FilterBar.js    # Filtering system
+│   ├── components/         # Reusable components
+│   │   ├── Layout.js      # Main layout wrapper
+│   │   ├── FilterBar.js   # Filtering system
 │   │   ├── ImageGallery.js # Image gallery component
+│   │   ├── ProjectSlideshow.js # Automatic slideshow component
 │   │   └── ...
-│   ├── context/            # React Context providers
-│   │   └── AppContext.js   # Global state management
-│   ├── hooks/              # Custom React hooks
+│   ├── context/           # React Context providers
+│   │   └── AppContext.js  # Global state management
+│   ├── hooks/             # Custom React hooks
 │   │   ├── useImageLoader.js
 │   │   └── useFilterSystem.js
-│   ├── pages/              # Next.js pages
-│   │   ├── index.js        # Landing page
-│   │   ├── models.js       # Models portfolio
-│   │   ├── work.js         # Work portfolio
-│   │   └── contact.js      # Contact form
-│   ├── styles/             # Global styles
-│   │   └── globals.css     # Tailwind imports & global CSS
-│   └── utils/              # Utility functions
-│       └── imageLoader.js  # Image optimization utils
+│   ├── pages/             # Next.js pages
+│   │   ├── index.js       # Landing page
+│   │   ├── models/        # Model pages
+│   │   │   └── [model].js # Dynamic model profile pages
+│   │   ├── models.js      # Models gallery with filtering
+│   │   ├── work.js        # Work portfolio with slideshows
+│   │   └── contact.js     # Contact form
+│   ├── styles/            # Global styles
+│   │   └── globals.css    # Tailwind imports & global CSS
+│   └── utils/             # Utility functions
+│       └── imageLoader.js # Image optimization utils
 ```
+
+## Key Components
+
+### ProjectSlideshow
+- Automatic image cycling with smooth fade transitions
+- Displays project title and image count
+- Configurable transition timing
+- Responsive design with consistent aspect ratio
+
+### FilterBar
+- Dynamic filter options based on available content
+- Model name filtering
+- Year-based filtering
+- Interactive state management
+
+### Model Profile Pages
+- Individual spotlight pages for each model
+- Photos organized by type (editorial, commercial, personal)
+- Year-based organization within each type
+- Full-screen image viewing capability
+- Smooth transitions and hover effects
+
+### Work Page Features
+- Random selection of two projects on each page load
+- Side-by-side project display
+- Automatic slideshows for each project
+- Smooth transitions between images
 
 ## Development
 
@@ -103,14 +138,15 @@ A modern, minimalist photography portfolio showcasing models and professional wo
 
 #### Models Photography
 - Dimensions: 1200x1200px (1:1 ratio)
-- Format: JPG with WebP conversion
+- Format: WebP for optimal performance
 - Max file size: 500KB
 - Resolution: 72 DPI
 - Color space: sRGB
+- Naming convention: modelname_number.webp
 
 #### Project Photography
 - Dimensions: 2400x1600px (3:2 ratio)
-- Format: JPG with WebP conversion
+- Format: WebP for optimal performance
 - Max file size: 800KB
 - Resolution: 72 DPI
 - Color space: sRGB
@@ -119,6 +155,7 @@ A modern, minimalist photography portfolio showcasing models and professional wo
 
 - Image lazy loading
 - Progressive image loading
+- Automatic image format conversion
 - Responsive images
 - Route prefetching
 - Component code splitting

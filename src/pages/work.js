@@ -1,155 +1,95 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Layout from '../components/Layout'
+import ProjectSlideshow from '../components/ProjectSlideshow'
+import fs from 'fs/promises'
+import path from 'path'
 
-// Mock data - replace with actual data
-const mockProjects = [
-  {
-    id: 1,
-    title: 'Project Title',
-    year: '2024',
-    type: 'EDITORIAL',
-    image: '/placeholder.jpg',
-    description: 'Project description goes here',
-    models: ['Model 1', 'Model 2'],
-    images: ['/placeholder.jpg', '/placeholder.jpg', '/placeholder.jpg']
-  },
-  // Add more mock projects as needed
-]
+export default function Work({ allProjects }) {
+  const [displayedProjects, setDisplayedProjects] = useState([])
 
-const years = ['2024', '2023', '2022', 'ALL']
-const types = ['EDITORIAL', 'COMMERCIAL', 'PERSONAL']
+  useEffect(() => {
+    // Select two random projects on mount or refresh
+    const selectRandomProjects = () => {
+      const shuffled = [...allProjects].sort(() => 0.5 - Math.random())
+      setDisplayedProjects(shuffled.slice(0, 2))
+    }
 
-export default function Work() {
-  const [selectedYear, setSelectedYear] = useState('ALL')
-  const [selectedType, setSelectedType] = useState(null)
-  const [expandedProject, setExpandedProject] = useState(null)
-
-  const filteredProjects = mockProjects.filter(project => {
-    if (selectedYear !== 'ALL' && project.year !== selectedYear) return false
-    if (selectedType && project.type !== selectedType) return false
-    return true
-  })
+    selectRandomProjects()
+  }, [allProjects])
 
   return (
     <Layout>
-      {/* Filters */}
-      <div className="sticky top-16 bg-primary z-20 py-8">
-        <div className="flex flex-col items-center space-y-6">
-          {/* Year Filter */}
-          <div className="flex flex-wrap justify-center gap-4">
-            <span className="text-text">YEAR:</span>
-            {years.map(year => (
-              <button
-                key={year}
-                onClick={() => setSelectedYear(year)}
-                className={`
-                  px-4 py-1 transition-colors duration-200
-                  ${selectedYear === year 
-                    ? 'bg-accent text-primary' 
-                    : 'text-text hover:text-accent'}
-                `}
-              >
-                {year}
-              </button>
-            ))}
-          </div>
-
-          {/* Type Filter */}
-          <div className="flex flex-wrap justify-center gap-4">
-            <span className="text-text">TYPE:</span>
-            {types.map(type => (
-              <button
-                key={type}
-                onClick={() => setSelectedType(selectedType === type ? null : type)}
-                className={`
-                  px-4 py-1 transition-colors duration-200
-                  ${selectedType === type 
-                    ? 'bg-accent text-primary' 
-                    : 'text-text hover:text-accent'}
-                `}
-              >
-                {type}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Projects List */}
-      <div className="space-y-24 mt-16">
-        {filteredProjects.map(project => (
-          <div key={project.id} className="space-y-8">
-            {/* Project Header */}
-            <div 
-              className="cursor-pointer"
-              onClick={() => setExpandedProject(
-                expandedProject === project.id ? null : project.id
-              )}
-            >
-              {/* Hero Image */}
-              <div className="relative aspect-[21/9] overflow-hidden mb-6">
-                <div 
-                  className="w-full h-full bg-center bg-cover image-hover"
-                  style={{ backgroundImage: `url(${project.image})` }}
-                />
-              </div>
-
-              {/* Project Info */}
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2>{project.title}</h2>
-                  <p className="text-small">{project.year}</p>
-                </div>
-                <div className={`
-                  transform transition-transform duration-300
-                  ${expandedProject === project.id ? 'rotate-180' : ''}
-                `}>
-                  ↓
-                </div>
-              </div>
-            </div>
-
-            {/* Expanded Content */}
-            {expandedProject === project.id && (
-              <div className="space-y-8 transition-all duration-300">
-                <p>{project.description}</p>
-                
-                {/* Models */}
-                {project.models.length > 0 && (
-                  <div>
-                    <h3 className="mb-4">Featured Models</h3>
-                    <div className="flex flex-wrap gap-4">
-                      {project.models.map(model => (
-                        <span 
-                          key={model}
-                          className="text-accent hover:underline cursor-pointer"
-                        >
-                          {model}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Image Grid */}
-                <div className="grid grid-cols-1 tablet:grid-cols-2 desktop:grid-cols-3 gap-grid-gap">
-                  {project.images.map((image, index) => (
-                    <div 
-                      key={index}
-                      className="relative aspect-square overflow-hidden"
-                    >
-                      <div 
-                        className="w-full h-full bg-center bg-cover image-hover"
-                        style={{ backgroundImage: `url(${image})` }}
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+      <div className="grid grid-cols-12 gap-8 mt-8">
+        {displayedProjects.map((project, index) => (
+          <div key={project.model} className={`col-span-6 aspect-[4/5]`}>
+            <ProjectSlideshow
+              images={project.images}
+              title={project.model}
+            />
           </div>
         ))}
       </div>
     </Layout>
   )
+}
+
+export async function getStaticProps() {
+  try {
+    const galleryPath = path.join(process.cwd(), 'public/images/galleries/models/ceyvion-andre-biggs')
+    const years = await fs.readdir(galleryPath)
+
+    // Group all photos by model
+    const projectsByModel = new Map()
+
+    for (const year of years) {
+      const yearPath = path.join(galleryPath, year)
+      const types = await fs.readdir(yearPath)
+
+      for (const type of types) {
+        const typePath = path.join(yearPath, type)
+        const files = await fs.readdir(typePath)
+
+        for (const file of files) {
+          if (file.endsWith('.webp')) {
+            // Extract model name from filename (before any numbers or special characters)
+            const modelName = path.parse(file).name.split(/[0-9-_]/)[0].trim()
+            const imageUrl = `/images/galleries/models/ceyvion-andre-biggs/${year}/${type}/${file}`
+
+            if (!projectsByModel.has(modelName)) {
+              projectsByModel.set(modelName, {
+                model: modelName,
+                images: []
+              })
+            }
+
+            projectsByModel.get(modelName).images.push({
+              url: imageUrl,
+              year,
+              type
+            })
+          }
+        }
+      }
+    }
+
+    // Convert Map to array and sort images within each project
+    const allProjects = Array.from(projectsByModel.values()).map(project => ({
+      ...project,
+      images: project.images.sort((a, b) => a.url.localeCompare(b.url))
+    }))
+
+    return {
+      props: {
+        allProjects
+      },
+      revalidate: 60
+    }
+  } catch (error) {
+    console.error('Error loading projects:', error)
+    return {
+      props: {
+        allProjects: []
+      }
+    }
+  }
 }

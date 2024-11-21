@@ -2,75 +2,143 @@
 @tailwind components;
 @tailwind utilities;
 
-html, body {
-  @apply text-text bg-primary;
-  font-family: 'Helvetica Neue', Arial, sans-serif;
+:root {
+  --primary: #000000;
+  --accent: #0033FF;
+  --background: #FFFFFF;
+  --grid-gap: 24px;
 }
 
-/* Typography Scale */
-h1 {
-  @apply text-[64px] leading-[72px] font-normal;
+@layer base {
+  html {
+    font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
+  }
+
+  body {
+    @apply bg-white text-black antialiased;
+    font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
+  }
+
+  /* Swiss Typography Scale */
+  h1 {
+    @apply font-helvetica text-4xl tracking-tight leading-none;
+  }
+
+  h2 {
+    @apply font-helvetica text-2xl tracking-tight leading-none;
+  }
+
+  h3 {
+    @apply font-helvetica text-xl tracking-tight leading-none;
+  }
+
+  p {
+    @apply font-helvetica text-base leading-relaxed;
+  }
 }
 
-h2 {
-  @apply text-[48px] leading-[56px] font-normal;
+@layer components {
+  /* Swiss-inspired Button */
+  .btn {
+    @apply font-helvetica text-sm tracking-wide px-4 py-2 transition-colors duration-300;
+  }
+
+  .btn-primary {
+    @apply text-black hover:text-accent;
+  }
+
+  /* Grid System */
+  .swiss-grid {
+    @apply grid grid-cols-12 gap-4;
+  }
+
+  /* Image Hover Effects */
+  .image-hover {
+    @apply transition-transform duration-500 ease-custom;
+    @apply group-hover:scale-105;
+  }
+
+  /* Typography Classes */
+  .text-caption {
+    @apply font-helvetica text-xs tracking-wider uppercase;
+  }
+
+  .text-label {
+    @apply font-helvetica text-xs tracking-widest uppercase;
+  }
+
+  .text-nav {
+    @apply font-helvetica text-sm tracking-wide;
+  }
 }
 
-h3 {
-  @apply text-[32px] leading-[40px] font-normal;
+@layer utilities {
+  /* Swiss-inspired Spacing */
+  .gap-swiss {
+    gap: var(--grid-gap);
+  }
+
+  /* Custom Transitions */
+  .ease-custom {
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Responsive Classes */
+  .desktop {
+    @apply min-[1200px]:block;
+  }
+
+  .tablet {
+    @apply min-[768px]:block;
+  }
+
+  .mobile {
+    @apply max-[767px]:block;
+  }
 }
 
-p {
-  @apply text-base leading-[24px];
+/* Modal Styles */
+.modal-overlay {
+  @apply fixed inset-0 z-50 bg-black bg-opacity-95;
+  @apply flex items-center justify-center;
 }
 
-.text-small {
-  @apply text-[14px] leading-[20px];
+.modal-content {
+  @apply relative max-w-[90vw] max-h-[90vh];
 }
 
-/* Navigation */
-.nav-link {
-  @apply relative text-text hover:text-accent transition-colors duration-200 ease-custom;
+.modal-image {
+  @apply max-w-full max-h-[90vh] object-contain;
 }
 
-.nav-link.active {
-  @apply after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-full after:h-[1px] after:bg-text;
+.modal-info {
+  @apply absolute bottom-4 left-4 space-y-1;
 }
 
-/* Image Grid */
-.image-grid {
-  @apply grid gap-grid-gap;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+/* Animation Classes */
+.fade-enter {
+  @apply opacity-0;
 }
 
-/* Transitions */
-.page-transition {
-  @apply transition-opacity duration-300 ease-custom;
+.fade-enter-active {
+  @apply opacity-100 transition-opacity duration-300 ease-custom;
 }
 
-.image-hover {
-  @apply transition-transform duration-200 ease-custom hover:scale-[1.02];
+.fade-exit {
+  @apply opacity-100;
 }
 
-/* Responsive Margins */
-.page-container {
-  @apply px-6 tablet:px-12 desktop:px-20;
+.fade-exit-active {
+  @apply opacity-0 transition-opacity duration-300 ease-custom;
 }
 
-/* Loading States */
-.image-loading {
-  @apply bg-gray-light animate-pulse;
-}
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .swiss-grid {
+    @apply grid-cols-6 gap-3;
+  }
 
-/* Custom Scrollbar */
-::-webkit-scrollbar {
-  @apply w-1;
-}
-
-::-webkit-scrollbar-track {
-  @apply bg-gray-light;
-}
-
-::-webkit-scrollbar-thumb {
-  @apply bg-accent rounded-full;
+  .text-nav {
+    @apply text-xs;
+  }
 }

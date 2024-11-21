@@ -1,99 +1,73 @@
-import { memo } from 'react'
-import { YEARS, TYPES } from '../hooks/useFilterSystem'
+import React from 'react'
 
-const FilterBar = ({
-  filters,
-  onYearFilter,
-  onTypeFilter,
-  onClear,
-  stats,
-  className = ''
-}) => {
+export default function FilterBar({ filters, onYearFilter, onModelFilter }) {
+  const { years, models, selectedYear, selectedModel } = filters
+
   return (
-    <div className={`sticky top-16 bg-primary z-20 py-8 ${className}`}>
-      <div className="flex flex-col items-center space-y-6">
-        {/* Year Filter */}
-        <div className="flex flex-wrap justify-center gap-4 items-center">
-          <span className="text-text">YEAR:</span>
-          <div className="flex flex-wrap gap-4">
-            {YEARS.map(year => (
+    <div className="grid grid-cols-12 gap-4 mt-0 mb-12">
+      {/* Year Filter */}
+      <div className="col-start-2 col-span-5">
+        <h2 className="font-helvetica text-xs tracking-widest mb-4 uppercase">Year</h2>
+        <div className="flex gap-8">
+          <button
+            onClick={() => onYearFilter('ALL')}
+            className={`font-helvetica text-sm tracking-wide transition-colors duration-300 ${
+              selectedYear === 'ALL'
+                ? 'text-accent'
+                : 'text-black hover:text-accent'
+            }`}
+          >
+            ALL
+          </button>
+          {years.map(year => (
+            year !== 'ALL' && (
               <button
                 key={year}
                 onClick={() => onYearFilter(year)}
-                className={`
-                  px-4 py-1 transition-all duration-200
-                  ${filters.year === year 
-                    ? 'bg-accent text-primary' 
-                    : 'text-text hover:text-accent'}
-                `}
-                aria-pressed={filters.year === year}
+                className={`font-helvetica text-sm tracking-wide transition-colors duration-300 ${
+                  selectedYear === year
+                    ? 'text-accent'
+                    : 'text-black hover:text-accent'
+                }`}
               >
                 {year}
               </button>
-            ))}
-          </div>
+            )
+          ))}
         </div>
-
-        {/* Type Filter */}
-        <div className="flex flex-wrap justify-center gap-4 items-center">
-          <span className="text-text">TYPE:</span>
-          <div className="flex flex-wrap gap-4">
-            {TYPES.map(type => (
-              <button
-                key={type}
-                onClick={() => onTypeFilter(type)}
-                className={`
-                  px-4 py-1 transition-all duration-200
-                  ${filters.type === type 
-                    ? 'bg-accent text-primary' 
-                    : 'text-text hover:text-accent'}
-                `}
-                aria-pressed={filters.type === type}
-              >
-                {type}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Filter Stats & Clear Button */}
-        {stats && stats.hasFilters && (
-          <div className="flex items-center gap-4 text-small">
-            <span className="text-text">
-              Showing {stats.filtered} of {stats.total}
-            </span>
-            <button
-              onClick={onClear}
-              className="text-accent hover:underline"
-              aria-label="Clear all filters"
-            >
-              Clear Filters
-            </button>
-          </div>
-        )}
       </div>
 
-      {/* Bottom Border */}
-      <div className="absolute bottom-0 left-0 right-0 h-px bg-gray-light" />
-
-      {/* Filter Active Indicator */}
-      {stats && stats.hasFilters && (
-        <div className="absolute bottom-0 left-0 h-px bg-accent" style={{
-          width: `${(stats.filtered / stats.total) * 100}%`,
-          transition: 'width 0.3s ease-custom'
-        }} />
-      )}
+      {/* Model Filter */}
+      <div className="col-start-7 col-span-5">
+        <h2 className="font-helvetica text-xs tracking-widest mb-4 uppercase">Model</h2>
+        <div className="flex gap-8">
+          <button
+            onClick={() => onModelFilter('ALL')}
+            className={`font-helvetica text-sm tracking-wide transition-colors duration-300 ${
+              selectedModel === 'ALL'
+                ? 'text-accent'
+                : 'text-black hover:text-accent'
+            }`}
+          >
+            ALL
+          </button>
+          {models.map(model => (
+            model !== 'ALL' && (
+              <button
+                key={model}
+                onClick={() => onModelFilter(model)}
+                className={`font-helvetica text-sm tracking-wide transition-colors duration-300 ${
+                  selectedModel === model
+                    ? 'text-accent'
+                    : 'text-black hover:text-accent'
+                }`}
+              >
+                {model.charAt(0).toUpperCase() + model.slice(1)}
+              </button>
+            )
+          ))}
+        </div>
+      </div>
     </div>
   )
 }
-
-// Memoize the component to prevent unnecessary re-renders
-export default memo(FilterBar, (prevProps, nextProps) => {
-  // Custom comparison function
-  return (
-    prevProps.filters.year === nextProps.filters.year &&
-    prevProps.filters.type === nextProps.filters.type &&
-    prevProps.stats?.filtered === nextProps.stats?.filtered &&
-    prevProps.stats?.total === nextProps.stats?.total
-  )
-})

@@ -1,0 +1,12 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Regex for conventional commit message format
+commit_msg_regex='^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\([a-z \-]+\))?: .+'
+
+if ! grep -qE "$commit_msg_regex" "$1"; then
+  echo "Error: Commit message must follow conventional commit format."
+  echo "Example: feat(models): add image grid component"
+  echo "Types: feat, fix, docs, style, refactor, perf, test, build, ci, chore, revert"
+  exit 1
+fi

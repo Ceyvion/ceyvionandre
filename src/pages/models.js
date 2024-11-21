@@ -1,103 +1,131 @@
 import { useState } from 'react'
 import Layout from '../components/Layout'
+import FilterBar from '../components/FilterBar'
+import { useFilterSystem } from '../hooks/useFilterSystem'
+import Link from 'next/link'
+import fs from 'fs/promises'
+import path from 'path'
 
-// Mock data - replace with actual data
-const mockModels = [
-  { id: 1, name: 'Model Name', year: '2024', type: 'EDITORIAL', image: '/placeholder.jpg' },
-  { id: 2, name: 'Model Name', year: '2023', type: 'COMMERCIAL', image: '/placeholder.jpg' },
-  { id: 3, name: 'Model Name', year: '2022', type: 'PERSONAL', image: '/placeholder.jpg' },
-]
-
-const years = ['2024', '2023', '2022', 'ALL']
-const types = ['EDITORIAL', 'COMMERCIAL', 'PERSONAL']
-
-export default function Models() {
-  const [selectedYear, setSelectedYear] = useState('ALL')
-  const [selectedType, setSelectedType] = useState(null)
-
-  const filteredModels = mockModels.filter(model => {
-    if (selectedYear !== 'ALL' && model.year !== selectedYear) return false
-    if (selectedType && model.type !== selectedType) return false
-    return true
-  })
+export default function Models({ initialPhotos }) {
+  const [selectedImage, setSelectedImage] = useState(null)
+  const { filteredItems, filters, handleYearFilter, handleModelFilter } = useFilterSystem(initialPhotos)
 
   return (
     <Layout>
       {/* Filters */}
-      <div className="sticky top-16 bg-primary z-20 py-8">
-        <div className="flex flex-col items-center space-y-6">
-          {/* Year Filter */}
-          <div className="flex flex-wrap justify-center gap-4">
-            <span className="text-text">YEAR:</span>
-            {years.map(year => (
-              <button
-                key={year}
-                onClick={() => setSelectedYear(year)}
-                className={`
-                  px-4 py-1 transition-colors duration-200
-                  ${selectedYear === year 
-                    ? 'bg-accent text-primary' 
-                    : 'text-text hover:text-accent'}
-                `}
-              >
-                {year}
-              </button>
-            ))}
-          </div>
-
-          {/* Type Filter */}
-          <div className="flex flex-wrap justify-center gap-4">
-            <span className="text-text">TYPE:</span>
-            {types.map(type => (
-              <button
-                key={type}
-                onClick={() => setSelectedType(selectedType === type ? null : type)}
-                className={`
-                  px-4 py-1 transition-colors duration-200
-                  ${selectedType === type 
-                    ? 'bg-accent text-primary' 
-                    : 'text-text hover:text-accent'}
-                `}
-              >
-                {type}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
+      <FilterBar
+        filters={filters}
+        onYearFilter={handleYearFilter}
+        onModelFilter={handleModelFilter}
+      />
 
       {/* Grid */}
-      <div className="grid grid-cols-1 tablet:grid-cols-2 desktop:grid-cols-3 gap-grid-gap mt-8">
-        {filteredModels.map(model => (
-          <div 
-            key={model.id}
-            className="group relative aspect-square overflow-hidden bg-gray-light"
+      <div className="grid grid-cols-12 gap-4">
+        {filteredItems.map((photo, index) => (
+          <Link
+            key={photo.url}
+            href={`/models/${photo.model}`}
+            className="col-span-4 aspect-square group relative overflow-hidden bg-gray-50"
           >
             {/* Image */}
             <div className="absolute inset-0">
-              <div 
-                className="w-full h-full bg-center bg-cover image-hover"
-                style={{ backgroundImage: `url(${model.image})` }}
+              <img
+                src={photo.url}
+                alt={photo.name}
+                className="w-full h-full object-cover transition-transform duration-500 ease-custom group-hover:scale-105"
               />
             </div>
 
             {/* Overlay */}
-            <div className="
-              absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40
-              flex items-end justify-start p-6
-              transition-all duration-300 ease-custom
-            ">
-              <div className="
-                transform translate-y-full group-hover:translate-y-0
-                transition-transform duration-300 ease-custom
-              ">
-                <h3 className="text-primary">{model.name}</h3>
-                <p className="text-primary text-small">{model.year}</p>
+            <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-40 transition-opacity duration-500 ease-custom" />
+
+            {/* Info */}
+            <div className="absolute inset-x-0 bottom-0 p-6 translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-custom">
+              <div className="space-y-1">
+                <h3 className="font-helvetica text-white text-sm tracking-wide capitalize">{photo.model}</h3>
+                <p className="font-helvetica text-white text-xs tracking-wider opacity-75">{photo.year}</p>
+                <p className="font-helvetica text-white text-xs tracking-wider opacity-75 uppercase">{photo.type}</p>
               </div>
             </div>
-          </div>
+          </Link>
         ))}
       </div>
+
+      {/* Image Modal */}
+      {selectedImage && (
+        <div
+          className="fixed inset-0 z-50 bg-black bg-opacity-95 flex items-center justify-center cursor-pointer"
+          onClick={() => setSelectedImage(null)}
+        >
+          <div className="relative max-w-[90vw] max-h-[90vh]">
+            <img
+              src={selectedImage.url}
+              alt={selectedImage.name}
+              className="max-w-full max-h-[90vh] object-contain"
+            />
+            <div className="absolute bottom-4 left-4 space-y-1">
+              <h3 className="font-helvetica text-white text-sm tracking-wide capitalize">{selectedImage.model}</h3>
+              <p className="font-helvetica text-white text-xs tracking-wider opacity-75">{selectedImage.year}</p>
+              <p className="font-helvetica text-white text-xs tracking-wider opacity-75 uppercase">{selectedImage.type}</p>
+            </div>
+          </div>
+        </div>
+      )}
     </Layout>
   )
+}
+
+export async function getStaticProps() {
+  try {
+    const galleryPath = path.join(process.cwd(), 'public/images/galleries/models/ceyvion-andre-biggs')
+    const years = await fs.readdir(galleryPath)
+
+    // Group all photos by model
+    const photosByModel = new Map()
+
+    for (const year of years) {
+      const yearPath = path.join(galleryPath, year)
+      const types = await fs.readdir(yearPath)
+
+      for (const type of types) {
+        const typePath = path.join(yearPath, type)
+        const files = await fs.readdir(typePath)
+
+        for (const file of files) {
+          if (file.endsWith('.webp')) {
+            // Extract model name from filename (before any numbers or special characters)
+            const modelName = path.parse(file).name.split(/[0-9-_]/)[0].trim()
+            const imageUrl = `/images/galleries/models/ceyvion-andre-biggs/${year}/${type}/${file}`
+
+            if (!photosByModel.has(modelName)) {
+              photosByModel.set(modelName, {
+                model: modelName,
+                year,
+                type,
+                url: imageUrl,
+                name: path.parse(file).name
+              })
+            }
+          }
+        }
+      }
+    }
+
+    // Convert Map to array and get one representative photo per model
+    const initialPhotos = Array.from(photosByModel.values())
+
+    return {
+      props: {
+        initialPhotos
+      },
+      revalidate: 60
+    }
+  } catch (error) {
+    console.error('Error loading photos:', error)
+    return {
+      props: {
+        initialPhotos: []
+      }
+    }
+  }
 }

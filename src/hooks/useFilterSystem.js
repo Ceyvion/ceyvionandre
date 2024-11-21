@@ -1,108 +1,59 @@
-import { useState, useCallback, useEffect } from 'react'
-import { useRouter } from 'next/router'
-import { useApp } from '../context/AppContext'
+import { useState, useEffect, useMemo } from 'react'
 
-export function useFilterSystem(initialData = [], options = {}) {
-  const {
-    persistFilters = true,
-    defaultYear = 'ALL',
-    defaultType = null,
-    updateUrl = true
-  } = options
+export function useFilterSystem(initialItems) {
+  const [selectedYear, setSelectedYear] = useState('ALL')
+  const [selectedModel, setSelectedModel] = useState('ALL')
 
-  const router = useRouter()
-  const { filters, setFilters, filterData } = useApp()
-  const [filteredItems, setFilteredItems] = useState(initialData)
+  // Extract unique years and models from items
+  const { years, models } = useMemo(() => {
+    const yearsSet = new Set(['ALL'])
+    const modelsSet = new Set(['ALL'])
 
-  // Initialize filters from URL if present
-  useEffect(() => {
-    if (!persistFilters) return
-
-    const { year, type } = router.query
-    const initialFilters = {
-      year: year || defaultYear,
-      type: type || defaultType
-    }
-
-    setFilters(initialFilters)
-  }, [router.query, persistFilters, defaultYear, defaultType, setFilters])
-
-  // Update URL when filters change
-  useEffect(() => {
-    if (!updateUrl) return
-
-    const query = {}
-    if (filters.year !== defaultYear) query.year = filters.year
-    if (filters.type !== defaultType) query.type = filters.type
-
-    router.push({
-      pathname: router.pathname,
-      query
-    }, undefined, { shallow: true })
-  }, [filters, defaultYear, defaultType, router, updateUrl])
-
-  // Update filtered items when data or filters change
-  useEffect(() => {
-    setFilteredItems(filterData(initialData))
-  }, [initialData, filterData])
-
-  // Filter handlers
-  const handleYearFilter = useCallback((year) => {
-    setFilters({ year })
-  }, [setFilters])
-
-  const handleTypeFilter = useCallback((type) => {
-    setFilters({ type: type === filters.type ? null : type })
-  }, [filters.type, setFilters])
-
-  const clearFilters = useCallback(() => {
-    setFilters({
-      year: defaultYear,
-      type: defaultType
+    initialItems.forEach(item => {
+      yearsSet.add(item.year)
+      modelsSet.add(item.model)
     })
-  }, [defaultYear, defaultType, setFilters])
-
-  // Get active filters
-  const getActiveFilters = useCallback(() => {
-    const active = []
-    if (filters.year !== defaultYear) active.push(filters.year)
-    if (filters.type) active.push(filters.type)
-    return active
-  }, [filters, defaultYear])
-
-  // Check if any filters are active
-  const hasActiveFilters = useCallback(() => {
-    return filters.year !== defaultYear || filters.type !== defaultType
-  }, [filters, defaultYear, defaultType])
-
-  // Get filter stats
-  const getFilterStats = useCallback(() => {
-    const total = initialData.length
-    const filtered = filteredItems.length
-    const hidden = total - filtered
 
     return {
-      total,
-      filtered,
-      hidden,
-      hasFilters: hasActiveFilters()
+      years: Array.from(yearsSet).sort((a, b) => {
+        if (a === 'ALL') return -1
+        if (b === 'ALL') return 1
+        return b.localeCompare(a)
+      }),
+      models: Array.from(modelsSet).sort((a, b) => {
+        if (a === 'ALL') return -1
+        if (b === 'ALL') return 1
+        return a.localeCompare(b)
+      })
     }
-  }, [initialData.length, filteredItems.length, hasActiveFilters])
+  }, [initialItems])
+
+  // Filter items based on selected year and model
+  const filteredItems = useMemo(() => {
+    return initialItems.filter(item => {
+      const yearMatch = selectedYear === 'ALL' || item.year === selectedYear
+      const modelMatch = selectedModel === 'ALL' || item.model === selectedModel
+      return yearMatch && modelMatch
+    })
+  }, [initialItems, selectedYear, selectedModel])
+
+  const handleYearFilter = (year) => {
+    setSelectedYear(year)
+  }
+
+  const handleModelFilter = (model) => {
+    setSelectedModel(model)
+  }
 
   return {
     filteredItems,
-    filters,
+    filters: {
+      years,
+      models,
+      selectedYear,
+      selectedModel
+    },
     handleYearFilter,
-    handleTypeFilter,
-    clearFilters,
-    getActiveFilters,
-    hasActiveFilters,
-    getFilterStats
+    handleModelFilter
   }
 }
-
-// Filter option constants
-export const YEARS = ['2024', '2023', '2022', 'ALL']
-export const TYPES = ['EDITORIAL', 'COMMERCIAL', 'PERSONAL']
-
-export default useFilterSystem
