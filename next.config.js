@@ -1,14 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  reactStrictMode: true,
+  output: 'export',
+  basePath: '/ceyvionandre',
   images: {
-    domains: [], // Add image domains if using external sources
-    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
+    unoptimized: true,
   },
-  webpack: (config) => {
-    config.resolve.fallback = { fs: false, net: false, tls: false };
-    return config;
-  }
+  trailingSlash: true,
 }
 
-module.exports = nextConfig
+export default nextConfig
