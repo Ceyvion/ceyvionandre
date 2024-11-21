@@ -2,7 +2,6 @@
   "name": "cbportfolio2",
   "version": "1.0.0",
   "description": "Professional photography portfolio for Ceyvion Andre Biggs",
-  "type": "module",
   "scripts": {
     "dev": "next dev & npm run watch-photos",
     "build": "next build",
